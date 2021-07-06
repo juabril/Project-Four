@@ -38,7 +38,7 @@ def menu_loop():
             clear()
         elif choice not in menu:
             print("That's not a valid option, please try again")
-            clear()
+            input("Please enter any key to continue..")
             
 
 def read_csv(anyfile):
@@ -69,44 +69,61 @@ def load_products(goods):
                        date_updated=product['date_updated'])
         except IntegrityError:
             product_record = Product.get(product_name=product['product_name'])
-            product_record.product_name = product['product_name']
-            product_record.product_quantity = product['product_quantity']
-            product_record.product_price = product['product_price']
-            product_record.date_updated = product['date_updated']
-            product_record.save()
-            
+            if product_record.date_updated <= product['date_updated']:
+                product_record.product_name = product['product_name']
+                product_record.product_quantity = product['product_quantity']
+                product_record.product_price = product['product_price']
+                product_record.date_updated = product['date_updated']
+                product_record.save()
+        
 
     
 def add_entry():
     """Add an entry to the database"""
     prod_name_input = input("\nPlease enter the name of the product: ")
     entries = Product.select()
+    #the below line will only return one result if True because there are no duplicates in the database
     entries = entries.where(Product.product_name == prod_name_input)
-    for entry in entries:
-        while entries:        
-            print("\nThat product already exists, please try again")
-            prod_name_input = input("Please enter another product: ")
-            entries = Product.select()
-            entries = entries.where(Product.product_name == prod_name_input)
-    while True:
-        try:
-            prod_quant_input = int(input("Please enter the quantity of products: "))
-        except ValueError:
-            print("That's not a valid input, quantity must be an integer, please try again")
-        else:
-            break
+    if entries:  
+        print("\nThat product already exists, we will update it with the new information")
+        update = Product.get(product_name = prod_name_input)
+        while True:
+            try:
+                update.product_quantity = int(input("Please enter the quantity of products: "))
+            except ValueError:
+                print("That's not a valid input, quantity must be an integer, please try again")
+            else:
+                break
+        while True:
+            try:
+                update.product_price = int(input("Please enter price of the product (in cents): "))
+            except ValueError:
+                print("That's not a valid input, price must be in cents (integer), please try again")
+            else:
+                break    
+        update.date_updated = datetime.datetime.now()
+        update.save()
+        print("This existing product has been updated with the new information!")        
+    else:
+        while True:
+            try:
+                prod_quant_input = int(input("Please enter the quantity of products: "))
+            except ValueError:
+                print("That's not a valid input, quantity must be an integer, please try again")
+            else:
+                break
 
-    while True:
-        try:
-            prod_price_input = int(input("Please enter the price of the product (in cents): "))
-        except ValueError:
-            print("That's not a valid input, price must be in cents (integer), please try again")
-        else:
-            break          
+        while True:
+            try:
+                prod_price_input = int(input("Please enter the price of the product (in cents): "))
+            except ValueError:
+                print("That's not a valid input, price must be in cents (integer), please try again")
+            else:
+                break          
 
-    Product.create(product_name = prod_name_input, product_quantity = prod_quant_input,
-                   product_price = prod_price_input)
-    print("Thank you, the product has been added successfully!")
+        Product.create(product_name = prod_name_input, product_quantity = prod_quant_input,
+                       product_price = prod_price_input)
+        print("Thank you, the product has been added successfully!")
     
      
 def view_entries():
@@ -136,7 +153,9 @@ def view_entries():
             print('='*60)
             print("The product you are looking for is : {}".format(entry.product_name))
             print("There are {} units of the product".format(entry.product_quantity))
+            print("The price of the product is {} cents".format(entry.product_price))
             print('='*60)
+            input("\nPlease press any key to continue..")
     
 def backup_database():
     """Back-up the database into a new csv file"""
