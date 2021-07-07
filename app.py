@@ -47,7 +47,6 @@ def read_csv(anyfile):
         goods = list(productreader)
         return goods
         
-new_products = read_csv('inventory.csv')
 
 def clean_data(raw_products):
     for product in raw_products:
@@ -59,8 +58,6 @@ def clean_data(raw_products):
         product['date_updated']=datetime.datetime.strptime(product['date_updated'],'%m/%d/%Y')
         
                                                                     
-clean_data(new_products)         
-
 def load_products(goods):   
     for product in goods:
         try:
@@ -204,11 +201,12 @@ menu = OrderedDict([
         ('b', backup_database),
         ])
 
-initialize() 
-if check_empty() == "empty":
-    load_products(new_products)
-
 
 if __name__ == '__main__':
+    initialize()
+    new_products = read_csv('inventory.csv')
+    clean_data(new_products)
+    if check_empty() == "empty":
+        load_products(new_products)
     menu_loop()
 
